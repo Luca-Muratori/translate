@@ -1,0 +1,15 @@
+{
+  "name": "translate",
+  
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "frontend-dev": "npm run dev --workspace=@sff/frontend",
+    "deploy": "cd infrastructure; cdk deploy -f --required-approval=never"
+  },
+  "workspaces":[
+    "apps/*",
+    "infrastructure",
+    "packages/*"
+  ]
+ 
+}
