@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { ITranslateRequest, ITranslateResponse } from "@sff/shared-types";
 
-const URL =
-  "https://huveuucaz7.execute-api.eu-central-1.amazonaws.com/prod/";
-async function translateText({
+const URL = "https://huveuucaz7.execute-api.eu-central-1.amazonaws.com/prod/";
+export const translateText = async ({
   inputLanguage,
   outputLanguage,
   inputText,
@@ -12,30 +12,45 @@ async function translateText({
   inputLanguage: string;
   outputLanguage: string;
   inputText: string;
-}) {
-  return fetch(URL, {
-    method: "POST",
-    body: JSON.stringify({
+}) => {
+  try {
+    const request: ITranslateRequest = {
       sourceLang: inputLanguage,
       targetLang: outputLanguage,
-      text: inputText,
-    }),
-  })
-    .then((result) => result.json())
-    .catch((e) => e.toString());
-}
+      sourceText: inputText,
+    };
+
+    const result = await fetch(URL, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    const rtnValue = (await result.json()) as ITranslateResponse;
+    return rtnValue;
+  } catch (error: any) {
+    console.error(error)
+    throw error
+  }
+};
 export default function Home() {
   const [inputText, setInputText] = useState<string>("");
   const [inputLanguage, setInputLanguage] = useState<string>("");
   const [outputLanguage, setOutputLanguage] = useState<string>("");
-  const [outputText, setOutputText] = useState<string>("");
+  const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
   return (
     <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-      <form action="" onSubmit={async e=>{
-        e.preventDefault()
-        const result =await translateText({inputText, inputLanguage, outputLanguage})
-        setOutputText(result)
-      }}>
+      <form
+        action=""
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const result = await translateText({
+            inputText,
+            inputLanguage,
+            outputLanguage,
+          });
+          setOutputText(result);
+        }}
+      >
         <div>
           <label htmlFor="inputText">input text</label>
           <textarea
@@ -56,7 +71,7 @@ export default function Home() {
         </div>
 
         <div>
-          <label htmlFor="outputLanguage">input language</label>
+          <label htmlFor="outputLanguage">output language</label>
           <textarea
             name=""
             id="outputLanguage"

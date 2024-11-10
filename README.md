@@ -45,4 +45,7 @@ in the test folder, it will be possible to rn tests
 for the translation I'm going to use an sdk from aws called client translate
 
 ----------
-I want to use monorepo, in order to have everything in an unique directory, so I don't have to open different terminal ti run both be and fe, and for this project I'm using npm to crete a monorepo of this project
+I want to use monorepo, in order to have everything in an unique directory, so I don't have to open different terminal ti run both be and fe, and for this project I'm using npm to crete a monorepo 
+
+----
+to have a general folder that contains all the types, for both be and fe, I created a package folder that will contains both types for the translate api, and in translate.d.ts will contains the encapsulation for the translate api 
