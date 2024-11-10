@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as path from "path"
 //transpile ts into js
 import * as lambdanodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
@@ -28,16 +29,18 @@ import * as iam from 'aws-cdk-lib/aws-iam'
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    const projectRoot="../"
+    const lambdasDirPath=path.join(projectRoot, "packages/lambdas")
 
     //policy attahced to lambda allowing access to the tralsate resource
     const translateAccessPolicy=new iam.PolicyStatement({
       actions:["translate:TranslateText"],
       resources:["*"]
     })
-
+    const translateLambdaPath= path.join(lambdasDirPath, "translate/index.ts")
     const labdafunc=new lambdanodejs.NodejsFunction(this, "timeofday", {
       //where the code for the function is located in this project
-      entry: "./lambda/timeofday.ts",
+      entry: translateLambdaPath,
       //handler: name of the function
       handler: "index",
       runtime: lambda.Runtime.NODEJS_20_X, 
