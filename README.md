@@ -49,3 +49,6 @@ I want to use monorepo, in order to have everything in an unique directory, so I
 
 ----
 to have a general folder that contains all the types, for both be and fe, I created a package folder that will contains both types for the translate api, and in translate.d.ts will contains the encapsulation for the translate api 
+-----
+
+as db we are using dynamo db

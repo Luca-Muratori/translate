@@ -1,6 +1,8 @@
 @URL=https://huveuucaz7.execute-api.eu-central-1.amazonaws.com/prod/
 
 
+
+
 POST {{URL}} HTTP/1.1
 Content-Type: application/json
 Accept: "application/json"
@@ -8,5 +10,11 @@ Accept: "application/json"
 {
     "sourceLang": "en",
     "targetLang": "ru",
-    "text": "portogallo"
+    "sourceText": "portugal"
 }
+###
+
+
+GET {{URL}} HTTP/1.1
+Content-Type: application/json
+Accept: "application/json"

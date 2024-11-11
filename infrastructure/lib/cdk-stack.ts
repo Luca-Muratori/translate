@@ -6,25 +6,7 @@ import * as path from "path"
 import * as lambdanodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as iam from 'aws-cdk-lib/aws-iam'
-
-
-// class ImageGallery extends Construct{
-//   constructor(scope: Construct, id: string, props?:cdk.StackProps){
-//     super(scope, id)
-
-//     new cdk.aws_s3.Bucket(this, "somes3bucket", {
-//       versioned:false,
-//       removalPolicy:cdk.RemovalPolicy.DESTROY,
-//       autoDeleteObjects:true
-//     })
-//     new cdk.aws_s3.Bucket(this, "thumbnails3", {
-//       versioned:false,
-//       removalPolicy:cdk.RemovalPolicy.DESTROY,
-//       autoDeleteObjects:true
-//     })
-//   }
-// }
-
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -32,23 +14,66 @@ export class CdkStack extends cdk.Stack {
     const projectRoot="../"
     const lambdasDirPath=path.join(projectRoot, "packages/lambdas")
 
+
+    //dynamodb construct here
+    const table=new dynamodb.Table(this, "translations", {
+      tableName:"translation",
+      partitionKey:{
+        name:"requestId",
+        type: dynamodb.AttributeType.STRING,
+      },
+      removalPolicy:cdk.RemovalPolicy.DESTROY
+    })
+
     //policy attahced to lambda allowing access to the tralsate resource
-    const translateAccessPolicy=new iam.PolicyStatement({
+    const translateServicePolicy=new iam.PolicyStatement({
       actions:["translate:TranslateText"],
       resources:["*"]
     })
+    
+    const translateTablePolicy=new iam.PolicyStatement({
+      actions:[
+        "dynamodb:PutItem",
+        "dynamodb:scan",
+        "dynamodb:GetItem",
+        "dynamodb:DeleteItem",
+      ],
+      resources:["*"]
+    })
+
+    //api top level construct
+    const restapi= new apigateway.RestApi(this, 'timeofdayrestapi')
+
     const translateLambdaPath= path.join(lambdasDirPath, "translate/index.ts")
-    const labdafunc=new lambdanodejs.NodejsFunction(this, "timeofday", {
+    const translateLambda=new lambdanodejs.NodejsFunction(this, "translateLambda", {
       //where the code for the function is located in this project
       entry: translateLambdaPath,
       //handler: name of the function
-      handler: "index",
+      handler: "translate",
       runtime: lambda.Runtime.NODEJS_20_X, 
-      initialPolicy: [translateAccessPolicy]
+      initialPolicy: [translateServicePolicy, translateTablePolicy],
+      environment:{
+        TRANSLATION_TABLE_NAME:table.tableName,
+        TRANSLATION_PARTITION_KEY: "requestId"
+      }
     })
-    // new ImageGallery(this, "imagebucket")
 
-    const restapi= new apigateway.RestApi(this, 'timeofdayrestapi')
-    restapi.root.addMethod("POST", new apigateway.LambdaIntegration(labdafunc))
+    restapi.root.addMethod("POST", new apigateway.LambdaIntegration(translateLambda))
+
+    //get translation lambda
+    const getTranslationSLambda=new lambdanodejs.NodejsFunction(this, "getTranslation", {
+      //where the code for the function is located in this project
+      entry: translateLambdaPath,
+      //handler: name of the function
+      handler: "getTranslations",
+      runtime: lambda.Runtime.NODEJS_20_X, 
+      initialPolicy: [translateTablePolicy],
+      environment:{
+        TRANSLATION_TABLE_NAME:table.tableName,
+        TRANSLATION_PARTITION_KEY: "requestId"
+      }
+    })
+
+    restapi.root.addMethod("GET", new apigateway.LambdaIntegration(getTranslationSLambda))
   }
 }
