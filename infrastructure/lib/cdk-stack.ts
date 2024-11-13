@@ -13,6 +13,7 @@ export class CdkStack extends cdk.Stack {
     super(scope, id, props);
     const projectRoot="../"
     const lambdasDirPath=path.join(projectRoot, "packages/lambdas")
+    const lambdaLayersDirPath=path.join(projectRoot, "packages/lambda-layers")
 
 
     //dynamodb construct here
@@ -42,9 +43,18 @@ export class CdkStack extends cdk.Stack {
     })
 
     //api top level construct
+    const translateLambdaPath= path.join(lambdasDirPath, "translate/index.ts")
+
+    const utilsLambdaLayerPath=path.resolve(path.join(lambdaLayersDirPath, "utils-lambda-layer"))
+
+    const utilsLambdaLayer=new lambda.LayerVersion(this, "utilsLambdaLayer",{
+      code:lambda.Code.fromAsset(utilsLambdaLayerPath),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      removalPolicy:cdk.RemovalPolicy.DESTROY
+    })
+
     const restapi= new apigateway.RestApi(this, 'timeofdayrestapi')
 
-    const translateLambdaPath= path.join(lambdasDirPath, "translate/index.ts")
     const translateLambda=new lambdanodejs.NodejsFunction(this, "translateLambda", {
       //where the code for the function is located in this project
       entry: translateLambdaPath,
@@ -52,6 +62,7 @@ export class CdkStack extends cdk.Stack {
       handler: "translate",
       runtime: lambda.Runtime.NODEJS_20_X, 
       initialPolicy: [translateServicePolicy, translateTablePolicy],
+      layers:[utilsLambdaLayer],
       environment:{
         TRANSLATION_TABLE_NAME:table.tableName,
         TRANSLATION_PARTITION_KEY: "requestId"
@@ -68,6 +79,7 @@ export class CdkStack extends cdk.Stack {
       handler: "getTranslations",
       runtime: lambda.Runtime.NODEJS_20_X, 
       initialPolicy: [translateTablePolicy],
+      layers:[utilsLambdaLayer],
       environment:{
         TRANSLATION_TABLE_NAME:table.tableName,
         TRANSLATION_PARTITION_KEY: "requestId"

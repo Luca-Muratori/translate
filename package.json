@@ -3,7 +3,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "frontend-dev": "npm run dev --workspace=@sff/frontend",
-    "deploy": "cd infrastructure && cdk deploy -f --require-approval never"
+    "deploy": "cd infrastructure && cdk deploy -f --require-approval never",
+    "build-utils-lambda-layer": "npm run build --workspace=@sff/utils-lambda-layer",
+    "watch-utils-lambda-layer": "npm run watch --workspace=@sff/utils-lambda-layer"
   },
   "workspaces": [
     "apps/*",

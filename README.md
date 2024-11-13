@@ -52,3 +52,7 @@ to have a general folder that contains all the types, for both be and fe, I crea
 -----
 
 as db we are using dynamo db
+
+----
+in order to keep the code as organized and modularized as possible I'll use Lambda Layers
+

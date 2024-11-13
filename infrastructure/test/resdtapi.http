@@ -10,7 +10,7 @@ Accept: "application/json"
 {
     "sourceLang": "en",
     "targetLang": "ru",
-    "sourceText": "portugal"
+    "sourceText": "moris"
 }
 ###
 
