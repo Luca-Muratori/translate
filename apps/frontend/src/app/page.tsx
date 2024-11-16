@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   ITranslateDBObject,
@@ -7,128 +6,149 @@ import {
   ITranslateResponse,
 } from "@sff/shared-types";
 
-const URL = "https://huveuucaz7.execute-api.eu-central-1.amazonaws.com/prod/";
-export const translateText = async ({
-  inputLanguage,
-  outputLanguage,
+const URL = "https://whiwdbx02i.execute-api.us-east-1.amazonaws.com/prod/";
+
+const translateText = async ({
+  inputLang,
   inputText,
+  outputLang,
 }: {
-  inputLanguage: string;
-  outputLanguage: string;
+  inputLang: string;
   inputText: string;
+  outputLang: string;
 }) => {
   try {
     const request: ITranslateRequest = {
-      sourceLang: inputLanguage,
-      targetLang: outputLanguage,
+      sourceLang: inputLang,
+      targetLang: outputLang,
       sourceText: inputText,
     };
 
-    const result = await fetch(URL, {
+    const result = await fetch(`${URL}`, {
       method: "POST",
       body: JSON.stringify(request),
     });
 
     const rtnValue = (await result.json()) as ITranslateResponse;
     return rtnValue;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error(error);
-    throw error;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    console.error(e);
+    throw e;
   }
 };
 
-export const getTranslations = async () => {
+const getTranslations = async () => {
   try {
     const result = await fetch(URL, {
       method: "GET",
     });
 
     const rtnValue = (await result.json()) as Array<ITranslateDBObject>;
-    console.log(rtnValue);
     return rtnValue;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error(error);
-    throw error;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    console.error(e);
+    throw e;
   }
 };
+
 export default function Home() {
+  const [inputLang, setInputLang] = useState<string>("");
+  const [outputLang, setOutputLang] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
-  const [inputLanguage, setInputLanguage] = useState<string>("");
-  const [outputLanguage, setOutputLanguage] = useState<string>("");
   const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
   const [translations, setTranslations] = useState<Array<ITranslateDBObject>>(
     []
   );
+
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
+    <main className="flex flex-col m-8">
       <form
-        action=""
-        onSubmit={async (e) => {
-          e.preventDefault();
+        className="flex flex-col space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
           const result = await translateText({
+            inputLang,
+            outputLang,
             inputText,
-            inputLanguage,
-            outputLanguage,
           });
+          console.log(result);
           setOutputText(result);
         }}
       >
         <div>
-          <label htmlFor="inputText">input text</label>
+          <label htmlFor="inputText">Input text:</label>
           <textarea
-            name=""
             id="inputText"
             value={inputText}
-            onChange={(event) => setInputText(event.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="inputLanguage">input language</label>
-          <textarea
-            name=""
-            id="inputLanguage"
-            value={inputLanguage}
-            onChange={(event) => setInputLanguage(event.target.value)}
+            onChange={(e) => setInputText(e.target.value)}
+            rows={3}
           />
         </div>
 
         <div>
-          <label htmlFor="outputLanguage">output language</label>
-          <textarea
-            name=""
-            id="outputLanguage"
-            value={outputLanguage}
-            onChange={(event) => setOutputLanguage(event.target.value)}
+          <label htmlFor="inputLang">Input Language:</label>
+          <input
+            id="inputLang"
+            type="text"
+            value={inputLang}
+            onChange={(e) => setInputLang(e.target.value)}
           />
         </div>
-        <button className="btn bg-blue-500 p-2 mt-2 rounded-xl" type="submit">
-          Translate
+
+        <div>
+          <label htmlFor="outputLang">Output Language:</label>
+          <input
+            id="outputLang"
+            type="text"
+            value={outputLang}
+            onChange={(e) => setOutputLang(e.target.value)}
+          />
+        </div>
+
+        <button className="btn bg-blue-500" type="submit">
+          translate
         </button>
       </form>
 
-      <p>{JSON.stringify(outputText, null, 2)}</p>
+      <div>
+        <p>Result:</p>
+        <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
+          {JSON.stringify(outputText, null, 2)}
+        </pre>
+      </div>
+
       <button
         className="btn bg-blue-500"
         type="button"
         onClick={async () => {
-          const data = await getTranslations();
-          setTranslations(data)
+          const rtnValue = await getTranslations();
+          console.log(rtnValue)
+          setTranslations(rtnValue);
         }}
       >
-        Get all translate
+        getTranslations
       </button>
-     
-        {translations.map((item)=>(
-          <div key={item.requestId}>
-            <p>
-              {item.sourceLang}/{item.sourceText}
-            </p>
-            <p>{item.targetLang}/{item.targetText}</p>
-          </div>
-        ))}
-    
+      <div>
+        <p>Result:</p>
+        <pre>
+          {translations.map((item) => (
+            <div key={item.requestId}>
+              <p>
+                {item.sourceLang}/{item.sourceText}
+              </p>
+              <p>
+                {item.targetLang}/{item.targetText}
+              </p>
+            </div>
+          ))}
+        </pre>
+
+        {/* <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
+          {JSON.stringify(translations, null, 2)}
+        </pre> */}
+      </div>
     </main>
   );
 }

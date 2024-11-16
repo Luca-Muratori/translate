@@ -1,4 +1,4 @@
-@URL=https://huveuucaz7.execute-api.eu-central-1.amazonaws.com/prod/
+@URL=https://whiwdbx02i.execute-api.us-east-1.amazonaws.com/prod/
 
 
 
@@ -9,7 +9,7 @@ Accept: "application/json"
 
 {
     "sourceLang": "en",
-    "targetLang": "ru",
+    "targetLang": "it",
     "sourceText": "moris"
 }
 ###
