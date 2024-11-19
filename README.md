@@ -21,5 +21,5 @@ in order to keep the code as organized and modularized as possible I'll use Lamb
 --------
 using s3 bucket to store the html
 ------
-cdn link https://d350lnyr8ittwk.cloudfront.net
+cdn link https://d1nbitgue0qzcq.cloudfront.net
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState } from "react";
 import {
@@ -5,9 +6,11 @@ import {
   ITranslateRequest,
   ITranslateResponse,
 } from "@sff/shared-types";
+import { fetchAuthSession } from "aws-amplify/auth";
 
-const URL = "https://whiwdbx02i.execute-api.us-east-1.amazonaws.com/prod/";
-
+const URL = "https://ara5o5slgh.execute-api.us-east-1.amazonaws.com/prod/";
+//in case we deployed a domain name
+// const URL= "https://api.domainName.com"
 const translateText = async ({
   inputLang,
   inputText,
@@ -24,9 +27,14 @@ const translateText = async ({
       sourceText: inputText,
     };
 
+    const authToken=(await fetchAuthSession()).tokens?.idToken?.toString()
+
     const result = await fetch(`${URL}`, {
       method: "POST",
       body: JSON.stringify(request),
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
     });
 
     const rtnValue = (await result.json()) as ITranslateResponse;
@@ -40,8 +48,12 @@ const translateText = async ({
 
 const getTranslations = async () => {
   try {
+    const authToken=(await fetchAuthSession()).tokens?.idToken?.toString()
     const result = await fetch(URL, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
     });
 
     const rtnValue = (await result.json()) as Array<ITranslateDBObject>;
@@ -134,6 +146,7 @@ export default function Home() {
         <p>Result:</p>
         <pre>
           {translations.map((item) => (
+            <>
             <div key={item.requestId}>
               <p>
                 {item.sourceLang}/{item.sourceText}
@@ -142,6 +155,8 @@ export default function Home() {
                 {item.targetLang}/{item.targetText}
               </p>
             </div>
+            <hr />
+            </>
           ))}
         </pre>
 
