@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -23,6 +24,7 @@ function RegistrationForm({
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [password2, setPassword2] = useState<string>("");
+  const [error, setError] = useState<string|null>(null)
 
   return (
     <form
@@ -48,7 +50,9 @@ function RegistrationForm({
 
           console.log(nextStep.signUpStep);
           onStepChange(nextStep);
-        } catch (e) {}
+        } catch (e: any) {
+          setError(e.toString())
+        }
       }}
     >
       <div>
@@ -87,6 +91,8 @@ function RegistrationForm({
       <Link className="hover:underline" href="/user">
         Login
       </Link>
+      
+      {error && <p className="text-red-600 font-bold">{error}</p>}
     </form>
   );
 }

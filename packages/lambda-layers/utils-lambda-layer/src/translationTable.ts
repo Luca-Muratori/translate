@@ -1,6 +1,6 @@
 import * as dynamodb from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { ITranslateDBObject } from "@sff/shared-types";
+import { ITranslatePrimaryKey, ITranslateResult } from "@sff/shared-types";
 
 export class TranslationTable {
   tableName: string;
@@ -11,19 +11,19 @@ export class TranslationTable {
   constructor({
     tableName,
     partitionKey,
-    sortKey
+    sortKey,
   }: {
     tableName: string;
     partitionKey: string;
-    sortKey: string
+    sortKey: string;
   }) {
     this.tableName = tableName;
-    this.partitionKey=partitionKey;
-    this.sortKey=sortKey;
+    this.partitionKey = partitionKey;
+    this.sortKey = sortKey;
     this.dynamodbClient = new dynamodb.DynamoDBClient({});
   }
 
-  async insert(data: ITranslateDBObject) {
+  async insert(data: ITranslateResult) {
     const tableInsetCmd: dynamodb.PutItemCommandInput = {
       TableName: this.tableName,
       Item: marshall(data),
@@ -31,25 +31,27 @@ export class TranslationTable {
 
     await this.dynamodbClient.send(new dynamodb.PutItemCommand(tableInsetCmd));
   }
-  
-  async query({username}:{username:string}) {
+
+  async query({ username }:ITranslatePrimaryKey) {
     const queryCmd: dynamodb.QueryCommandInput = {
       TableName: this.tableName,
-      KeyConditionExpression:'#PARTITION_KEY = :username',
-      ExpressionAttributeNames:{
-        "#PARTITION_KEY" : "username"
+      KeyConditionExpression: "#PARTITION_KEY = :username",
+      ExpressionAttributeNames: {
+        "#PARTITION_KEY": "username",
       },
-      ExpressionAttributeValues:{
-        ":username": {S: username}
+      ExpressionAttributeValues: {
+        ":username": { S: username },
       },
-      ScanIndexForward: true
+      ScanIndexForward: true,
     };
 
-    const {Items}=await this.dynamodbClient.send(new dynamodb.QueryCommand(queryCmd));
-    if(!Items) return []
+    const { Items } = await this.dynamodbClient.send(
+      new dynamodb.QueryCommand(queryCmd)
+    );
+    if (!Items) return [];
 
-    const rtnData= Items.map((item)=>unmarshall(item) as ITranslateDBObject)
-    return rtnData
+    const rtnData = Items.map((item) => unmarshall(item) as ITranslateResult);
+    return rtnData;
   }
 
   async getAll() {
@@ -65,7 +67,20 @@ export class TranslationTable {
       return [];
     }
 
-    const rtnData = Items.map((item) => unmarshall(item) as ITranslateDBObject);
+    const rtnData = Items.map((item) => unmarshall(item) as ITranslateResult);
     return rtnData;
+  }
+
+  async delete(item:ITranslatePrimaryKey) {
+    const deleteCmd: dynamodb.DeleteItemCommandInput = {
+      TableName: this.tableName,
+      Key: {
+        [this.partitionKey]: { S: item.username },
+        [this.sortKey]: { S: item.requestId },
+      },
+    };
+
+    await this.dynamodbClient.send(new dynamodb.DeleteItemCommand(deleteCmd));
+    return item
   }
 }

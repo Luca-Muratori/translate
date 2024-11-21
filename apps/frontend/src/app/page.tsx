@@ -2,77 +2,24 @@
 "use client";
 import { useState } from "react";
 import {
-  ITranslateDBObject,
-  ITranslateRequest,
+  ITranslateResult,
   ITranslateResponse,
 } from "@sff/shared-types";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { getCurrentUser } from "aws-amplify/auth";
+import { useTranslate } from "@/hooks/";
 
-const URL = "https://ara5o5slgh.execute-api.us-east-1.amazonaws.com/prod/";
-//in case we deployed a domain name
-// const URL= "https://api.domainName.com"
-const translateText = async ({
-  inputLang,
-  inputText,
-  outputLang,
-}: {
-  inputLang: string;
-  inputText: string;
-  outputLang: string;
-}) => {
-  try {
-    const request: ITranslateRequest = {
-      sourceLang: inputLang,
-      targetLang: outputLang,
-      sourceText: inputText,
-    };
 
-    const authToken=(await fetchAuthSession()).tokens?.idToken?.toString()
-
-    const result = await fetch(`${URL}`, {
-      method: "POST",
-      body: JSON.stringify(request),
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    });
-
-    const rtnValue = (await result.json()) as ITranslateResponse;
-    return rtnValue;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    console.error(e);
-    throw e;
-  }
-};
-
-const getTranslations = async () => {
-  try {
-    const authToken=(await fetchAuthSession()).tokens?.idToken?.toString()
-    const result = await fetch(URL, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    });
-
-    const rtnValue = (await result.json()) as Array<ITranslateDBObject>;
-    return rtnValue;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    console.error(e);
-    throw e;
-  }
-};
 
 export default function Home() {
   const [inputLang, setInputLang] = useState<string>("");
   const [outputLang, setOutputLang] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
   const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
-  const [translations, setTranslations] = useState<Array<ITranslateDBObject>>(
-    []
-  );
+  //const [translations, setTranslations] = useState<Array<ITranslateResult>>([]);
+
+  const {isLoading, translations, translate, isTranslating } = useTranslate()
+
+  if(isLoading) return <p>is loading....</p>
 
   return (
     <main className="flex flex-col m-8">
@@ -80,13 +27,12 @@ export default function Home() {
         className="flex flex-col space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
-          const result = await translateText({
-            inputLang,
-            outputLang,
-            inputText,
+          // eslint-disable-next-line prefer-const
+          let result = await translate({
+            sourceLang: inputLang,
+            targetLang: outputLang,
+            sourceText: inputText
           });
-          console.log(result);
-          setOutputText(result);
         }}
       >
         <div>
@@ -131,34 +77,47 @@ export default function Home() {
         </pre>
       </div>
 
-      <button
+      {/* <button
         className="btn bg-blue-500"
         type="button"
         onClick={async () => {
-          const rtnValue = await getTranslations();
-          console.log(rtnValue)
+          const rtnValue = await getUserTranslations();
+          console.log(rtnValue);
           setTranslations(rtnValue);
         }}
       >
-        getTranslations
-      </button>
-      <div>
-        <p>Result:</p>
-        <pre>
-          {translations.map((item) => (
-            <>
-            <div key={item.requestId}>
+        get translations
+      </button> */}
+      <div className="flex flex-col space-y-2 p-1">
+        {translations.map((item) => (
+          <div key={item.requestId}>
+            <div
+              key={item.requestId}
+              className="flex flex-row justify-between space-x-1 bg-slate-400"
+            >
               <p>
                 {item.sourceLang}/{item.sourceText}
               </p>
               <p>
                 {item.targetLang}/{item.targetText}
               </p>
+              {/* <button
+                className="btn p-1 bg-red-500 rounded-md hover:bg-red-300"
+                type="button"
+                onClick={async () => {
+                  const rtnValue = await deleteUserTranslation({
+                    requestId: item.requestId,
+                    username: item.username,
+                  });
+                  setTranslations(rtnValue);
+                }}
+              >
+                X
+              </button> */}
             </div>
             <hr />
-            </>
-          ))}
-        </pre>
+          </div>
+        ))}
 
         {/* <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
           {JSON.stringify(translations, null, 2)}

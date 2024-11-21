@@ -89,12 +89,13 @@ export class TranslationService extends Construct {
         environment,
       }
     );
-
+    
     // restapi.root.addMethod("POST", new apigateway.LambdaIntegration(translateLambda))
     restApi.addTranslateMethod({
+      resource:restApi.userResource,
       httpMethod: "POST",
       lambda: translateLambda,
-      isAuth: true
+      isAuth: true,
     });
 
     //get translation lambda
@@ -113,9 +114,53 @@ export class TranslationService extends Construct {
     );
 
     restApi.addTranslateMethod({
+      resource:restApi.userResource,
       httpMethod: "GET",
       lambda: getTranslationsLambda,
       isAuth: true
+    });
+    
+    //get translation lambda
+    const userDeleteTranslateLambda = createNodejsLambda(
+      this,
+      "userDeleteTranslateLambda",
+      {
+        //where the code for the function is located in this project
+        lambdaRelPath: "translate/index.ts",
+        //handler: name of the function
+        handlerName: "deleteUserTranslation",
+        initialPolicy: [translateTablePolicy],
+        layers: [utilsLambdaLayer],
+        environment,
+      }
+    );
+
+    restApi.addTranslateMethod({
+      resource:restApi.userResource,
+      httpMethod: "DELETE",
+      lambda: userDeleteTranslateLambda,
+      isAuth: true
+    });
+    //get translation lambda
+    const publicTranslateLambda = createNodejsLambda(
+      this,
+      "publicTranslateLambda",
+      {
+        //where the code for the function is located in this project
+        lambdaRelPath: "translate/index.ts",
+        //handler: name of the function
+        handlerName: "publicTranslate",
+        initialPolicy: [translateServicePolicy],
+        layers: [utilsLambdaLayer],
+        environment,
+      }
+    );
+
+    restApi.addTranslateMethod({
+      resource:restApi.publicResource,
+      httpMethod: "POST",
+      lambda: publicTranslateLambda,
+      isAuth: false
     });
   }
 }

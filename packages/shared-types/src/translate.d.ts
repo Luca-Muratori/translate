@@ -9,7 +9,11 @@ export type ITranslateResponse = {
     targetText: string
 }
 
-export type ITranslateDBObject=ITranslateRequest & ITranslateResponse &{
-    requestId: string;
-    username: string
+export type ITranslatePrimaryKey={
+    username: string;
+    requestId: string
 }
+
+export type ITranslateResult=ITranslateRequest & ITranslateResponse & ITranslatePrimaryKey
+
+export type ITranslateResultList = Array<ITranslateResult>

@@ -7,7 +7,7 @@ import {
 } from "/opt/nodejs/utils-lambda-layer";
 
 import {
-  ITranslateDBObject,
+  ITranslateResult,
   ITranslateRequest,
   ITranslateResponse,
 } from "@sff/shared-types";
@@ -25,6 +25,7 @@ if (!TRANSLATION_TABLE_NAME) {
 if (!TRANSLATION_PARTITION_KEY) {
   throw new exception.MissingEnvironmentVariable("TRANSLATION_PARTITION_KEY");
 }
+
 if (!TRANSLATION_SORT_KEY) {
   throw new exception.MissingEnvironmentVariable("TRANSLATION_SORT_KEY");
 }
@@ -37,13 +38,86 @@ const translateTable = new TranslationTable({
 
 const getUsername = (event: lambda.APIGatewayProxyEvent) => {
   const claims = event.requestContext.authorizer?.claims;
-
-  if (!claims) throw new Error("user not authenticated");
+  if (!claims) {
+    throw new Error("user not authenticated");
+  }
 
   const username = claims["cognito:username"];
-  if (!username) throw new Error("username doesn't exist");
-
+  if (!username) {
+    throw new Error("username doesn't exist");
+  }
   return username;
+};
+
+const parseTranslateRequest = (requestStr: string) => {
+  let request = JSON.parse(requestStr) as ITranslateRequest;
+
+  if (!request.sourceLang) {
+    throw new exception.MissingParameters("sourceLang");
+  }
+  if (!request.targetLang) {
+    throw new exception.MissingParameters("targetLang");
+  }
+  if (!request.sourceText) {
+    throw new exception.MissingParameters("sourceText");
+  }
+
+  return request;
+};
+
+const parseDeleteRequest = (requestStr: string) => {
+  let request = JSON.parse(requestStr) as { requestId: string };
+  if (!request.requestId) {
+    throw new exception.MissingParameters("requestId");
+  }
+
+  return request;
+};
+
+const getCurrentTime = () => {
+  return Date.now();
+};
+
+const formatTime = (time: number) => {
+  return new Date(time).toString();
+};
+
+export const publicTranslate: lambda.APIGatewayProxyHandler = async function (
+  event: lambda.APIGatewayProxyEvent,
+  context: lambda.Context
+) {
+  try {
+    if (!event.body) {
+      throw new exception.MissingBodyData();
+    }
+    const request = parseTranslateRequest(event.body);
+    console.log("parsed request", request);
+
+    const nowEpoch = getCurrentTime();
+    console.log("nowEpoch", nowEpoch);
+
+    const targetText = await getTranslation(request);
+    console.log("targetText", targetText);
+
+    const response: ITranslateResponse = {
+      timestamp: formatTime(nowEpoch),
+      targetText,
+    };
+
+    const result: ITranslateResult = {
+      requestId: nowEpoch.toString(),
+      username: "",
+      ...request,
+      ...response,
+    };
+
+    console.log(result);
+
+    return gateway.createSuccessJsonRsponse(result);
+  } catch (e: any) {
+    console.error(e);
+    return gateway.createErrorJsonRsponse(e);
+  }
 };
 
 export const userTranslate: lambda.APIGatewayProxyHandler = async function (
@@ -51,50 +125,39 @@ export const userTranslate: lambda.APIGatewayProxyHandler = async function (
   context: lambda.Context
 ) {
   try {
-    const username = getUsername(event);
-
     if (!event.body) {
       throw new exception.MissingBodyData();
     }
 
-    let body = JSON.parse(event.body) as ITranslateRequest;
+    const username = getUsername(event);
+    console.log("username:", username);
 
-    if (!body.sourceLang) {
-      throw new exception.MissingParameters("sourceLang");
-    }
-    if (!body.targetLang) {
-      throw new exception.MissingParameters("targetLang");
-    }
-    if (!body.sourceText) {
-      throw new exception.MissingParameters("sourceText");
-    }
+    const request = parseTranslateRequest(event.body);
+    console.log("parsed request", request);
 
     const now = new Date(Date.now()).toString();
     console.log(now);
 
-    const result = await getTranslation(body);
-    console.log(result);
+    const nowEpoch = getCurrentTime();
 
-    if (!result.TranslatedText) {
-      throw new exception.MissingParameters("TranslationText");
-    }
+    const targetText = await getTranslation(request);
 
-    const rtnData: ITranslateResponse = {
-      timestamp: now,
-      targetText: result.TranslatedText,
+    const response: ITranslateResponse = {
+      timestamp: formatTime(nowEpoch),
+      targetText,
     };
 
     // save the translation into our translation table
     // the table object that is saved to the database
-    const tableObj: ITranslateDBObject = {
-      requestId: context.awsRequestId,
+    const result: ITranslateResult = {
+      requestId: nowEpoch.toString(),
       username,
-      ...body,
-      ...rtnData,
+      ...request,
+      ...response,
     };
 
-    await translateTable.insert(tableObj);
-    return gateway.createSuccessJsonRsponse(rtnData);
+    await translateTable.insert(result);
+    return gateway.createSuccessJsonRsponse(result);
   } catch (e: any) {
     console.error(e);
     return gateway.createErrorJsonRsponse(e);
@@ -104,9 +167,28 @@ export const userTranslate: lambda.APIGatewayProxyHandler = async function (
 export const getUserTranslations: lambda.APIGatewayProxyHandler =
   async function (event: lambda.APIGatewayProxyEvent, context: lambda.Context) {
     try {
-      const username=getUsername(event)
-     // const rtnData = await translateTable.getAll();
-      const rtnData = await translateTable.query({username});
+      const username = getUsername(event);
+
+      const rtnData = await translateTable.query({ username, requestId:"" });
+      return gateway.createSuccessJsonRsponse(rtnData);
+    } catch (e: any) {
+      console.error(e);
+      return gateway.createErrorJsonRsponse(e);
+    }
+  };
+
+export const deleteUserTranslation: lambda.APIGatewayProxyHandler =
+  async function (event: lambda.APIGatewayProxyEvent, context: lambda.Context) {
+    try {
+      if (!event.body) {
+        throw new exception.MissingBodyData();
+      }
+
+      const username = getUsername(event);
+
+      const { requestId } = parseDeleteRequest(event.body);
+
+      const rtnData = await translateTable.delete({ username, requestId });
       return gateway.createSuccessJsonRsponse(rtnData);
     } catch (e: any) {
       console.error(e);
