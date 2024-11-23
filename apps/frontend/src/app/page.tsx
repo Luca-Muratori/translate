@@ -7,87 +7,24 @@ import {
 } from "@sff/shared-types";
 import { getCurrentUser } from "aws-amplify/auth";
 import { useTranslate } from "@/hooks/";
+import { deleteUserTranslation } from "@/lib/translateApi";
+import { TranslateRequestForm } from "@/components";
 
 
 
 export default function Home() {
-  const [inputLang, setInputLang] = useState<string>("");
-  const [outputLang, setOutputLang] = useState<string>("");
-  const [inputText, setInputText] = useState<string>("");
-  const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
+
+  // const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
   //const [translations, setTranslations] = useState<Array<ITranslateResult>>([]);
 
-  const {isLoading, translations, translate, isTranslating } = useTranslate()
+  const {isLoading, translations, deleteTranslation, isDeleting } = useTranslate()
 
   if(isLoading) return <p>is loading....</p>
 
   return (
     <main className="flex flex-col m-8">
-      <form
-        className="flex flex-col space-y-4"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          // eslint-disable-next-line prefer-const
-          let result = await translate({
-            sourceLang: inputLang,
-            targetLang: outputLang,
-            sourceText: inputText
-          });
-        }}
-      >
-        <div>
-          <label htmlFor="inputText">Input text:</label>
-          <textarea
-            id="inputText"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            rows={3}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="inputLang">Input Language:</label>
-          <input
-            id="inputLang"
-            type="text"
-            value={inputLang}
-            onChange={(e) => setInputLang(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="outputLang">Output Language:</label>
-          <input
-            id="outputLang"
-            type="text"
-            value={outputLang}
-            onChange={(e) => setOutputLang(e.target.value)}
-          />
-        </div>
-
-        <button className="btn bg-blue-500" type="submit">
-          translate
-        </button>
-      </form>
-
-      <div>
-        <p>Result:</p>
-        <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
-          {JSON.stringify(outputText, null, 2)}
-        </pre>
-      </div>
-
-      {/* <button
-        className="btn bg-blue-500"
-        type="button"
-        onClick={async () => {
-          const rtnValue = await getUserTranslations();
-          console.log(rtnValue);
-          setTranslations(rtnValue);
-        }}
-      >
-        get translations
-      </button> */}
+      <TranslateRequestForm/>
+     
       <div className="flex flex-col space-y-2 p-1">
         {translations.map((item) => (
           <div key={item.requestId}>
@@ -101,19 +38,15 @@ export default function Home() {
               <p>
                 {item.targetLang}/{item.targetText}
               </p>
-              {/* <button
+              <button
                 className="btn p-1 bg-red-500 rounded-md hover:bg-red-300"
                 type="button"
                 onClick={async () => {
-                  const rtnValue = await deleteUserTranslation({
-                    requestId: item.requestId,
-                    username: item.username,
-                  });
-                  setTranslations(rtnValue);
+                  const rtnValue = deleteTranslation(item);
                 }}
               >
-                X
-              </button> */}
+               {isDeleting ? "..." : "X"} 
+              </button>
             </div>
             <hr />
           </div>

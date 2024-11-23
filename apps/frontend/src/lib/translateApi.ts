@@ -1,4 +1,4 @@
-import { ITranslatePrimaryKey, ITranslateRequest, ITranslateResponse, ITranslateResultList } from "@sff/shared-types";
+import { ITranslatePrimaryKey, ITranslateRequest,  ITranslateResult, ITranslateResultList } from "@sff/shared-types";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 const URL = "https://ara5o5slgh.execute-api.us-east-1.amazonaws.com/prod";
@@ -14,7 +14,7 @@ export const translatePublicText = async (request: ITranslateRequest) => {
       body: JSON.stringify(request),
     });
 
-    const rtnValue = (await result.json()) as ITranslateResponse;
+    const rtnValue = (await result.json()) as ITranslateResult;
     return rtnValue;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
@@ -27,7 +27,6 @@ export const translateUserText = async (request: ITranslateRequest) => {
   try {
 
     const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
-
     const result = await fetch(`${URL}/user`, {
       method: "POST",
       body: JSON.stringify(request),
@@ -36,7 +35,7 @@ export const translateUserText = async (request: ITranslateRequest) => {
       },
     });
 
-    const rtnValue = (await result.json()) as ITranslateResponse;
+    const rtnValue = (await result.json()) as ITranslateResult;
     return rtnValue;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {

@@ -1,2 +1,6 @@
 export * from './ConfigureAmplifyClient'
 export * from './Provider'
+export * from './TranslateRequestForm'
+export * from './RegistrationForm'
+export * from './ConfirmSignup'
+export * from './LoginForm'
