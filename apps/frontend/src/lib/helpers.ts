@@ -1,2 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const emptyPromise= new Promise((accept, reject)=> {})
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export const emptyPromise = new Promise((accent, reject) => {});
+export function getDate(time: number) {
+  return new Date(time).toLocaleDateString();
+}
+export function getTime(time: number) {
+  return new Date(time).toLocaleTimeString();
+}

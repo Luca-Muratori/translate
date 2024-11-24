@@ -82,3 +82,11 @@ export const deleteUserTranslation = async (item: ITranslatePrimaryKey) => {
     throw e;
   }
 };
+
+export function getUsersTranslations(): any {
+  throw new Error("Function not implemented.");
+}
+export function translateUsersText(request: ITranslateRequest): Promise<unknown> {
+  throw new Error("Function not implemented.");
+}
+

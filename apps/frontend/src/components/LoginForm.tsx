@@ -1,66 +1,52 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ILoginFormData } from "@/lib";
-import { signIn } from "aws-amplify/auth";
-import Link from "next/link";
+import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useUser } from "@/hooks/useUser";
+import { ILoginFormData } from "@/lib";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 
-export function LoginForm({ onSignedIn }: { onSignedIn: () => void }) {
+export const LoginForm = ({ onSignedIn }: { onSignedIn?: () => void }) => {
   const {
     register,
+    handleSubmit,
     formState: { errors },
   } = useForm<ILoginFormData>();
 
-  const onSubmit: SubmitHandler<ILoginFormData> = async (
-    { email, password },
-    event
-  ) => {
+  const { login, busy } = useUser();
+
+  const onSubmit: SubmitHandler<ILoginFormData> = async (data, event) => {
     event && event.preventDefault();
-    try {
-      await signIn({
-        username: email,
-        password,
-        options: {
-          userAttributes: {
-            email,
-          },
-        },
-      });
-      onSignedIn();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.log(e);
-    }
+    login(data).then(() => {
+      onSignedIn && onSignedIn();
+    });
   };
+
   return (
-    <form className="flex flex-col space-y-4">
+    <form className="flex flex-col space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <label htmlFor="email">E-mail:</label>
-        <input
+        <Label htmlFor="email">Email:</Label>
+        <Input
+          disabled={busy}
           id="email"
-          type="email"
           {...register("email", { required: true })}
         />
-        {errors.email && <span>field required</span>}
+        {errors.email && <span>field is required</span>}
       </div>
 
       <div>
-        <label htmlFor="password">Password:</label>
-        <input
+        <Label htmlFor="password">Password:</Label>
+        <Input
           id="password"
           type="password"
+          disabled={busy}
           {...register("password", { required: true })}
         />
-        {errors.password && <span>field required</span>}
+        {errors.password && <span>field is required</span>}
       </div>
 
-      <button className="btn bg-blue-500" type="submit">
-        Login
-      </button>
-      <Link className="hover:underline" href="/user">
-        Login
-      </Link>
+      <Button type="submit">{busy ? "logging..." : "login"}</Button>
     </form>
   );
-}
+};

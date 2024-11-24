@@ -1,59 +1,84 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useTranslate } from '@/hooks'
-import { ITranslateRequest } from '@sff/shared-types'
-import React from 'react'
-import {useForm, SubmitHandler} from 'react-hook-form'
+"use client";
+import { useTranslate } from "@/hooks";
+import { ITranslateRequest } from "@sff/shared-types";
+import React, { useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { useApp } from "./AppProvider";
 
-export const TranslateRequestForm=()=>{
-    
-    const {register, handleSubmit, formState:{errors}}=useForm<ITranslateRequest>()
+export const TranslateRequestForm = () => {
+  const { translate, isTranslating } = useTranslate();
+  const { selectedTranslation } = useApp();
 
-    const {translate, isTranslating,  } = useTranslate()
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ITranslateRequest>();
 
-    const onSubmit: SubmitHandler<ITranslateRequest>=(data, event)=>{
-        event && event.preventDefault()
-        translate(data)
+  useEffect(() => {
+    if (selectedTranslation) {
+      setValue("sourceLang", selectedTranslation.sourceLang);
+      setValue("sourceText", selectedTranslation.sourceText);
+      setValue("targetLang", selectedTranslation.targetLang);
     }
-    
-    return (
-        <form
-        className="flex flex-col space-y-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div>
-          <label htmlFor="inputText">Input text:</label>
-          <textarea
-            id="inputText"
-            {...register("sourceText", {required: true})}
-            rows={3}
-          />
-          {errors.sourceText && <span>text to be translated required</span>}
-        </div>
+  }, [selectedTranslation]);
 
-        <div>
-          <label htmlFor="inputLang">Input Language:</label>
-          <input
-            id="sourceLang"
-            type="text"
-            {...register("sourceLang", {required: true})}
-          />
-          {errors.sourceLang && <span>original language required</span>}
-        </div>
+  const onSubmit: SubmitHandler<ITranslateRequest> = (data, event) => {
+    event && event.preventDefault();
+    translate(data);
+  };
 
-        <div>
-          <label htmlFor="targetLang">Output Language:</label>
-          <input
-            id="targetLang"
-            type="text"
-            {...register("targetLang", {required: true})}
-          />
-          {errors.targetLang && <span>translated language required</span>}
-        </div>
+  return (
+    <form className="flex flex-col space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <Label htmlFor="sourceText">Input text:</Label>
+        <Textarea
+          id="sourceText"
+          {...register("sourceText", { required: true })}
+          rows={3}
+        />
+        {errors.sourceText && <span>field is required</span>}
+      </div>
 
-        <button className="btn bg-blue-500" type="submit">
-          {isTranslating ? "translating..." : "translate"}
-        </button>
-      </form>
-    )
-}
+      <div>
+        <Label htmlFor="sourceLang">Input Language:</Label>
+        <Input
+          id="sourceLang"
+          type="text"
+          {...register("sourceLang", { required: true })}
+        />
+        {errors.sourceLang && <span>field is required</span>}
+      </div>
+
+      <div>
+        <Label htmlFor="targetLang">Output Language:</Label>
+        <Input
+          id="targetLang"
+          type="text"
+          {...register("targetLang", { required: true })}
+        />
+        {errors.targetLang && <span>field is required</span>}
+      </div>
+
+      <Button type="submit">
+        {isTranslating ? "translating..." : "translate"}
+      </Button>
+
+      <div>
+        <Label htmlFor="targetText">Translated text:</Label>
+        <Textarea
+          readOnly
+          id="targetText"
+          value={selectedTranslation?.targetText}
+          rows={3}
+        />
+      </div>
+    </form>
+  );
+};
