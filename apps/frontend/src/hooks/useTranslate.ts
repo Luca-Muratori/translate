@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { emptyPromise, translateApi } from "@/lib";
+import { translateApi } from "@/lib";
 import { ITranslatePrimaryKey, ITranslateRequest } from "@sff/shared-types";
 import { useUser } from "./useUser";
 import { useApp } from "@/components";
@@ -40,7 +39,7 @@ export const useTranslate = () => {
           translateQuery.data.concat([result])
         );
       }
-     //setSelectedTranslation(result);
+      setSelectedTranslation(result);
     },
     onError: (e) => {
       setError(e.toString());
@@ -61,7 +60,7 @@ export const useTranslate = () => {
       }
 
       const index = translateQuery.data.findIndex(
-        (tItem: { requestId: string; }) => tItem.requestId === result.requestId
+        (tItem) => tItem.requestId === result.requestId
       );
       const copyData = [...translateQuery.data];
       copyData.splice(index, 1);

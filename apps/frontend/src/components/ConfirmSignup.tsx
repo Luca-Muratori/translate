@@ -1,8 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
+'use client'
 import { useUser } from "@/hooks";
 import { IRegisterConfirmation, ISignUpState } from "@/lib";
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 
 export const ConfirmSignUp = ({
   onStepChange,
@@ -15,7 +18,7 @@ export const ConfirmSignUp = ({
     formState: { errors },
   } = useForm<IRegisterConfirmation>();
 
-  const { confirmRegister } = useUser();
+  const { busy, confirmRegister } = useUser();
 
   const onSubmit: SubmitHandler<IRegisterConfirmation> = async (
     data,
@@ -33,14 +36,14 @@ export const ConfirmSignUp = ({
   return (
     <form className="flex flex-col space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <label htmlFor="email">Email:</label>
-        <input id="email" {...register("email", { required: true })} />
+        <Label htmlFor="email">Email:</Label>
+        <Input id="email" {...register("email", { required: true })} />
         {errors.email && <span>field is required</span>}
       </div>
 
       <div>
-        <label htmlFor="verificationCode">Verification Code:</label>
-        <input
+        <Label htmlFor="verificationCode">Verification Code:</Label>
+        <Input
           id="verificationCode"
           type="string"
           {...register("verificationCode", { required: true })}
@@ -48,9 +51,7 @@ export const ConfirmSignUp = ({
         {errors.verificationCode && <span>field is required</span>}
       </div>
 
-      <button className="btn bg-blue-500" type="submit">
-        {"confirm"}
-      </button>
+      <Button type="submit">{busy ? "confirming..." : "confirm"}</Button>
     </form>
   );
 };

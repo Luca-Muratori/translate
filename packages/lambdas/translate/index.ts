@@ -116,7 +116,7 @@ export const publicTranslate: lambda.APIGatewayProxyHandler = async function (
     return gateway.createSuccessJsonRsponse(result);
   } catch (e: any) {
     console.error(e);
-    return gateway.createErrorJsonRsponse(e);
+    return gateway.createErrorJsonRsponse(e.toString());
   }
 };
 
@@ -160,7 +160,7 @@ export const userTranslate: lambda.APIGatewayProxyHandler = async function (
     return gateway.createSuccessJsonRsponse(result);
   } catch (e: any) {
     console.error(e);
-    return gateway.createErrorJsonRsponse(e);
+    return gateway.createErrorJsonRsponse(e.toString());
   }
 };
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 import { IAuthUser } from "@/lib";
 import React, { useContext, createContext, useState } from "react";
